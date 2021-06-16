@@ -1,0 +1,15 @@
+# To create the environment just run the command below
+# conda-env create -f environment.yml
+name: uqsa_tut
+dependencies:
+  - python 
+  - numpy
+  - matplotlib
+  - scipy
+  - sympy
+  - statsmodels
+  - jupyter
+  - xlwt
+  - pip
+  - pip:
+    - chaospy ==2.2.2
