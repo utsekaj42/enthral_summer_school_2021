@@ -1,11 +1,17 @@
 # Enthral Summer School Days 1 (1D arterial models) and 3 (UQSA) 
 _NOTE_ This is not the final set of files, so remember to check for updates closer to the course.
 
-This repository will include all the IPython Notebooks and Python files required for the summer school. These instructions specify how to get started by creating a Python environment with the required modules using `conda`.
+
+The course content is organized into Jupyter Notebooks which require a Jupyter Server to run the code and provide an interface accessible through the web browser.
+
+The Jupyter Server environment must provide a Python kernel (3.7 or newer) and the required modules: Required modules: numpy, scipy, sympy, numba, pandas, statsmodels, matplotlib, chaospy (4.3.2), ipywidgets, networkx, openpyxl, h5py, lxml, graphviz.
+
+We will make a preconfigured Jupyter server available for the course, so participants should be able to use these notbooks through any up-to-date webbrowser.
+
+To run these notebooks on your own device, you will need to create a Python environment with the required dependencies. The most reliable way to accomplish this is by using the Anaconda Python distribtuion and the `environment.yml` file provided that specifies the required modules. (More detailed instructions about this are provided below)
 
 # Setup and usage
-First, you need to have a Python environment with the required dependencies. These are specified in the `environment.yml` file, which can be automatically processed by the `conda` package manager.
-(See <https://www.anaconda.com/download/>). The steps outlined below assume one is using a terminal where `conda` is on the path, but the steps should be achievable in the Anaconda Navigator as well.
+First, you need to have a Python environment with the required dependencies. These are specified in the `environment.yml` file, which can be automatically processed by the `conda` package manager provided by Anaconda (See <https://www.anaconda.com/download/>). The steps outlined below assume one is using a terminal where `conda` is on the path, but the steps should be achievable in the Anaconda Navigator as well.
 <https://docs.anaconda.com/anaconda/user-guide/getting-started/>
 
 # Installation
