@@ -3,6 +3,7 @@
 name: uqsa_tut
 dependencies:
   - python
+  - future
   - numpy
   - numba
   - matplotlib

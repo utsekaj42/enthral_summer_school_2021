@@ -18,11 +18,11 @@ First, you need to have a Python environment with the required dependencies. The
 Assuming `conda` is installed then
 
 ```
-conda env create --file=environment.yaml 
+conda env create --file=environment.yml 
 ```
 should install dependencies in the environment `uqsa_tut` which is the name specified in `environment.yml`. If you prefer to name the environment something else you can specify it with the `-n` option:
 ```
-conda env create --file=environment.yaml  -n NAME # Creates an environment named NAME
+conda env create --file=environment.yml  -n NAME # Creates an environment named NAME
 ``` 
 
 # Starting Jupyter-Notebook in this envrionment
