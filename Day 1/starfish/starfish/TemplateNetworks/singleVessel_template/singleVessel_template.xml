@@ -25,7 +25,7 @@
     <initMeanFlow unit="m3 s-1">0.00015</initMeanFlow>
     <initMeanPressure unit="mmHg">100</initMeanPressure>
     <geometryPath>None</geometryPath>
-    <estimateWindkesselCompliance>False</estimateWindkesselCompliance>
+    <estimateWindkesselCompliance>No</estimateWindkesselCompliance>
     <compPercentageWK3>0.8</compPercentageWK3>
     <compPercentageTree>0.8</compPercentageTree>
     <compTotalSys unit="m3 Pa-1">4.895587352e-08</compTotalSys>

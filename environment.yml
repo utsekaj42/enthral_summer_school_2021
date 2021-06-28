@@ -18,5 +18,6 @@ dependencies:
   - graphviz
   - h5py
   - pip
+  - future
   - pip:
     - chaospy ==4.3.2
