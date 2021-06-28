@@ -1,21 +1,18 @@
 # To create the environment just run the command below
 # conda-env create -f environment.yml
-name: uqsa_tut
+name: starfish_dev
 dependencies:
-  - python
+  - python =3.6
+  - psutil
   - numpy
-  - numba
   - matplotlib
   - scipy
-  - sympy
-  - statsmodels
-  - jupyter
-  - ipywidgets
-  - xlwt
-  - networkx
-  - lxml
-  - graphviz
   - h5py
+  - lxml >=3.4.2
   - pip
+  - graphviz
+  - future
+  - sympy
+  - pytest
   - pip:
-    - chaospy ==4.3.2
+    - chaospy ==2.2.2
