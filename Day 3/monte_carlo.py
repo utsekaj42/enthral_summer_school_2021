@@ -37,8 +37,8 @@ def uq_measures_dummy_func():
 def generate_sample_matrices_mc(Ns, number_of_parameters, jpdf, sample_method='R'):
 
     Xtot = jpdf.sample(2*Ns, sample_method).transpose()
-    A = Xtot[0:Ns, :]
-    B = Xtot[Ns:, :]
+    A = Xtot[0:Ns]
+    B = Xtot[Ns:]
 
     C = np.empty((number_of_parameters, Ns, number_of_parameters))
     # create C sample matrices
@@ -49,57 +49,70 @@ def generate_sample_matrices_mc(Ns, number_of_parameters, jpdf, sample_method='R
     return A, B, C
 # end sample matrices
 
+def calculate_sensitivity_indices(y_a, y_b, y_c):
+    """
+    Saltelli's algorithm for estimating Si and 
+    Sobol 2007 algorithm for S_t using Monte Carlo integration
+    
+    Inputs:
+    y_a, y_b (array): first index corresponds to sample second to variables of interest
+    y_c (array): first index corresponds conditional index, second to sample and 
+        following dimensions to variables of interest
+        
+    Returns: s, st
+        s (array): first order sensitivities first index corrresponds to input second 
+            to variable of interest
+        st (array): total sensitivities first index corrresponds to input second 
+            to variable of interest
+    """
+    s_shape = y_c.shape[0:1] + y_c.shape[2:]
+    s = np.zeros(s_shape)
+    st = np.zeros(s_shape)
+
+    mean = 0.5*(np.mean(y_a,axis=0) + np.mean(y_b,axis=0))
+    y_a_center = y_a - mean
+    y_b_center = y_b - mean
+    f0sq = np.mean(y_a_center,axis=0) * np.mean(y_b_center,axis=0) # 0 when data is centered
+    var_est = np.var(y_b, axis=0)
+    for i, y_c_i in enumerate(y_c):
+        y_c_i_center = y_c_i - mean
+        #s[i] = (np.mean(y_a_center*y_c_i_center, axis=0)-f0sq)/var_est #Sobol 1993 
+        s[i] = np.mean(y_a_center*(y_c_i_center - y_b_center), axis=0)/var_est #Saltelli 2010
+        #st[i] = 1 - (np.mean(y_c_i_center*y_b_center, axis=0) - f0sq)/var_est  #Homma  1996
+        st[i] = np.mean(y_b_center*(y_b_center-y_c_i_center), axis=0)/var_est #Sobol 2007
+    return s, st
+
 
 # mc algorithm for variance based sensitivity coefficients
 def calculate_sensitivity_indices_mc(y_a, y_b, y_c):
+    """
+    Homma and Saltelli's algorithm for estimating Si and 
+    Sobol's 1993 algorithm for S_t using Monte Carlo integration
+    
+    Inputs:
+    y_a, y_b (array): first index corresponds to sample second to variables of interest
+    y_c (array): first index corresponds conditional index, second to sample and 
+        following dimensions to variables of interest
+        
+    Returns: s, st
+        s (array): first order sensitivities first index corrresponds to input second 
+            to variable of interest
+        st (array): total sensitivities first index corrresponds to input second 
+            to variable of interest
+    """
+    s_shape = y_c.shape[0:1] + y_c.shape[2:]
+    s = np.zeros(s_shape)
+    st = np.zeros(s_shape)
 
-    # single output value y_a for one set of samples
-    if len(y_c.shape) == 2:
-        Ns, n_parameters = y_c.shape
-
-        # for the first order index
-        f0sq_first = np.sum(y_a*y_b)/ Ns 
-        y_var_first = np.sum(y_b**2.)/(Ns-1) - f0sq_first
-
-        # for the total index
-        f0sq_total = (sum(y_a)/Ns)**2
-        y_var_total = np.sum(y_a**2.)/(Ns-1) - f0sq_total
-
-        s = np.zeros(n_parameters)
-        st = np.zeros(n_parameters)
-
-        for i in range(n_parameters):
-            # first order index
-            cond_var_X = np.sum(y_a*y_c[:, i])/(Ns - 1) - f0sq_first
-            s[i] = cond_var_X/y_var_first
-
-            # total index
-            cond_exp_not_X = np.sum(y_b*y_c[:, i])/(Ns - 1) - f0sq_total
-            st[i] = 1 - cond_exp_not_X/y_var_total
-
-    # vector output value y_a,.. for one set of samples
-    elif len(y_c.shape) == 3:
-        n_y, Ns, n_parameters = y_c.shape
-        # for the first order index
-        f0sq_first = np.sum(y_a*y_b, axis=1) / Ns
-        y_var_first = np.sum(y_b ** 2., axis=1) / (Ns - 1) - f0sq_first
-
-        # for the total index
-        f0sq_total = (np.sum(y_a, axis=1) / Ns) ** 2
-        y_var_total = np.sum(y_a ** 2., axis=1) / (Ns - 1) - f0sq_total
-
-        s = np.zeros((n_parameters, n_y))
-        st = np.zeros((n_parameters, n_y))
-
-        for i in range(n_parameters):
-            # first order index
-            cond_var_X = np.sum(y_a * y_c[:, :, i], axis=1) / (Ns - 1) - f0sq_first
-
-            s[i, :] = cond_var_X / y_var_first
-
-            # total index
-            cond_exp_not_X = np.sum(y_b * y_c[:, :, i], axis=1) / (Ns - 1) - f0sq_total
-            st[i, :] = 1 - cond_exp_not_X / y_var_total
-
+    mean = 0.5*(np.mean(y_a,axis=0) + np.mean(y_b,axis=0))
+    y_a_center = y_a - mean
+    y_b_center = y_b - mean
+    f0sq = np.mean(y_a_center,axis=0) * np.mean(y_b_center,axis=0) # 0 when data is centered
+    var_est = np.var(y_b, axis=0)
+    for i, y_c_i in enumerate(y_c):
+        y_c_i_center = y_c_i - mean
+        s[i] = (np.mean(y_a_center*y_c_i_center, axis=0)-f0sq)/var_est #Sobol 1993 
+        st[i] = 1 - (np.mean(y_c_i_center*y_b_center, axis=0) - f0sq)/var_est  #Homma  1996
     return s, st
+
 # end mc algorithm for variance based sensitivity coefficients
