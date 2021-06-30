@@ -36,12 +36,12 @@ def generate_distributions(zm, wm=None):
 
 
 # calculate sens indices of non additive model
-def monte_carlo_sens_nonlin(Ns, jpdf, sample_method='R'):
+def monte_carlo_sens_nonlin(Ns, jpdf, rule='R'):
 
     N_prms = len(jpdf)
 
     # 1. Generate sample matrices
-    XA, XB, XC = generate_sample_matrices_mc(Ns, N_prms, jpdf, sample_method)
+    XA, XB, XC = generate_sample_matrices_mc(Ns, N_prms, jpdf, sample_method=rule)
 
     # 2. Evaluate the model
     Y_A, Y_B, Y_C = evaluate_non_additive_linear_model(XA, XB, XC)
@@ -70,24 +70,24 @@ def evaluate_non_additive_linear_model(X_A, X_B, X_C):
     Y_B = linear_model(W_B, Z_B)
 
     # 3. evaluate sample matrices X_C
-    Y_C = np.empty((Ns, N_prms))
+    Y_C = np.empty((N_prms, Ns))
     for i in range(N_prms):
         x = X_C[i, :, :]
         z = x[:, :N_terms]
         w = x[:, N_terms:]
-        Y_C[:, i] = linear_model(w, z)
+        Y_C[i,:] = linear_model(w, z)
 
     return Y_A, Y_B, Y_C
 # end model evaluation
 
 # polynomial chaos sensitivity analysis
-def polynomial_chaos_sens(Ns_pc, jpdf, polynomial_order, basis=None, return_reg=False):
+def polynomial_chaos_sens(Ns_pc, jpdf, polynomial_order, basis=None, return_reg=False, sample_method='R'):
     N_terms = int(len(jpdf) / 2)
     # 1. generate orthogonal polynomials
     if basis is None:
         basis = cpw.generate_basis(polynomial_order, jpdf)
     # 2. generate samples with random sampling
-    samples_pc = jpdf.sample(size=Ns_pc, rule='R')
+    samples_pc = jpdf.sample(size=Ns_pc, rule=sample_method)
     # 3. evaluate the model, to do so transpose samples and hash input data
     transposed_samples = samples_pc.transpose()
     samples_z = transposed_samples[:, :N_terms]
@@ -210,10 +210,10 @@ if __name__ == '__main__':
 
     # sensitivity analytical values
     Sa, Szw, Sta = analytic_sensitivity_coefficients(zm, wm)
- 
+    N_prms = len(jpdf)
+    N_terms = N_prms//2
 
     # Monte Carlo
-    #Ns_mc = 1000000 # Number of samples mc
     Ns_mc = 10000 # Number of samples mc
     # calculate sensitivity indices with mc
     A_s, B_s, C_s, f_A, f_B, f_C, Smc, Stmc = monte_carlo_sens_nonlin(Ns_mc, jpdf)
@@ -227,7 +227,7 @@ if __name__ == '__main__':
 
     # compare the computations
     import pandas as pd
-    row_labels  = ['X_'+str(x) for x in range(1,N_terms*2+1)]
+    row_labels  = ['X_'+str(x) for x in range(1,N_prms+1)]
     S=np.column_stack((Sa,Spc,Smc,Sta,Stpc,Stmc))
     S_table = pd.DataFrame(S, columns=['Sa','Spc','Smc','Sta','Stpc','Stmc'], index=row_labels)  
     print(S_table.round(3))
@@ -236,7 +236,6 @@ if __name__ == '__main__':
     S2 = cpw.Sens_m2(gpce_reg, jpdf) # second order indices with gpc
     
     # print all second order indices
-    print(S2_dict)
     print(pd.DataFrame(S2,columns=row_labels,index=row_labels).round(3))
     
     # sum all second order indices 
@@ -368,60 +367,3 @@ if __name__ == '__main__':
             plt.ylabel('abs error')
             plt.xlabel('number of samples [1e3]')
             plt.legend()
-
-        # # Convergence Monte Carlo with sobol sampling
-        # list_of_samples = np.array([10000, 50000, 100000, 500000, 1000000])
-        # s_mc_err = np.zeros((len(list_of_samples), N_prms))
-        # st_mc_err = np.zeros((len(list_of_samples), N_prms))
-        # # average over
-        # N_iter = 10
-        # for i, N_smpl in enumerate(list_of_samples):
-        #     for j in range(N_iter):
-        #         A_s, XB, XC, Y_A, Y_B, Y_C, S, ST = monte_carlo_sens(N_smpl,
-        #                                                                  jpdf,
-        #                                                                  rule='S')
-        #         s_mc_err[i] += np.abs(S - Sa)
-        #         st_mc_err[i] += np.abs(ST - Sta)
-        #
-                # print('MC convergence analysis: N_smpl {} - finished with iteration {} of {}'.format(N_smpl, 1 + j, N_iter))
-        #     s_mc_err[i] /= float(N_iter)
-        #     st_mc_err[i] /= float(N_iter)
-        #
-        # fig_sobol = plt.figure('Sobol sampling')
-        # fig_sobol.suptitle('Sobol sampling')
-        # for l, (s_e, st_e) in enumerate(zip(s_mc_err.T, st_mc_err.T)):
-        #     ax = plt.subplot(1, 2, 1)
-        #     plt.title('First order sensitivity indices')
-        #     plt.plot(list_of_samples/1000, s_e, '-', label='S_{}'.format(l))
-        #     ax.set_yscale('log')
-        #     plt.ylabel('abs error')
-        #     plt.xlabel('number of samples [1e3]')
-        #     plt.legend()
-        #
-        #     ax1 = plt.subplot(1, 2, 2)
-        #     plt.title('Total sensitivity indices')
-        #     plt.plot(list_of_samples/1000, st_e, '-', label='ST_{}'.format(l))
-        #     ax1.set_yscale('log')
-        #     plt.ylabel('abs error')
-        #     plt.xlabel('number of samples [1e3]')
-        #     plt.legend()
-        #
-        # fig_random = plt.figure('Sobol sampling - average of indices')
-        # fig_random.suptitle('Sobol sampling - average of indices')
-        #
-        # ax = plt.subplot(1, 2, 1)
-        # plt.title('First order sensitivity indices')
-        # plt.plot(list_of_samples / 1000, np.sum(s_mc_err, axis=1), '-')
-        # ax.set_yscale('log')
-        # plt.ylabel('abs error')
-        # plt.xlabel('number of samples [1e3]')
-        #
-        # ax1 = plt.subplot(1, 2, 2)
-        # plt.title('Total sensitivity indices')
-        # plt.plot(list_of_samples / 1000, np.sum(st_mc_err, axis=1), '-')
-        # ax1.set_yscale('log')
-        # plt.ylabel('abs error')
-        # plt.xlabel('number of samples [1e3]')
-
-    plt.show()
-    plt.close()
