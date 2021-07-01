@@ -37,7 +37,6 @@ def generate_distributions(zm, wm=None):
 
 # calculate sens indices of non additive model
 def monte_carlo_sens_nonlin(Ns, jpdf, rule='R'):
-
     N_prms = len(jpdf)
 
     # 1. Generate sample matrices

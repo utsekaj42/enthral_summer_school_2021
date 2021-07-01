@@ -15,7 +15,6 @@ from monte_carlo import generate_sample_matrices_mc
 from monte_carlo import calculate_sensitivity_indices_mc
 import pandas as pd
 import chaospy_wrapper as cpw
-cp.Sens_m
 
 # start the linear model
 def linear_model(w, z):
@@ -53,10 +52,10 @@ def evaluate_linear_model(A, B, C, w):
     Y_B = linear_model(w, B)
 
     # 3. evaluate sample matrices C
-    Y_C = np.empty((number_of_samples, number_of_parameters))
+    Y_C = np.empty((number_of_parameters, number_of_samples))
     for i in range(number_of_parameters):
         z = C[i, :, :]
-        Y_C[:, i] = linear_model(w, z)
+        Y_C[i, :] = linear_model(w, z)
 
     return Y_A, Y_B, Y_C
 # end model evaluation
@@ -85,6 +84,10 @@ if __name__ == '__main__':
     
     pdfs = []
 
+    # Modify the standard deviations by changes in the 
+    # zm[idx, 1] = std value
+    # zm[0, 1] = 2
+
     for i, z in enumerate(zm):
         pdfs.append(cp.Normal(z[0], z[1]))
 
@@ -94,14 +97,14 @@ if __name__ == '__main__':
     Z = jpdf.sample(Ns)
     # evaluate the model
     Y = linear_model(w, Z.transpose())
-    print(np.var(Y))
+#    print('var(Y)=',np.var(Y))
 
     # Scatter plots of data for visual inspection of sensitivity
     fig=plt.figure()
     for k in range(Nrv):
         plt.subplot(2, 2, k + 1)
         plt.plot(Z[k, :], Y[:], '.')
-        xlbl = 'Z' + str(k)
+        xlbl = 'Z' + str(k+1)
         plt.xlabel(xlbl)
         
     fig.tight_layout()  # adjust subplot(s) to the figure area.
@@ -232,7 +235,7 @@ if __name__ == '__main__':
 
         # Plot the data
         plt.plot(Z[k, :], Y[:], '.')
-        xlbl = 'Z' + str(k)
+        xlbl = 'Z' + str(k+1)
         plt.xlabel(xlbl)
         plt.ylabel('Y')
 
@@ -285,7 +288,7 @@ if __name__ == '__main__':
         Ymodel = w[k] * zvals
         plt.plot(zvals, Ymodel)
 
-        xlbl = 'Z' + str(k)
+        xlbl = 'Z' + str(k+1)
         plt.xlabel(xlbl)
 
         plt.ylim(ymin, ymax)
