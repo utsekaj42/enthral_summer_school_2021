@@ -38,12 +38,10 @@ jupyter-notebook
 ```
 Now keep the terminal open as closing it will stop the server process. It should automatically open your web browser at `localhost:8888`, but if not you should see the address with an access token printed out in the terminal.
 
-The home page should show a list of files in the directory where the `jupyter-notebook` server is running. _Note_ if you have started the server in another directory, you will not be able to access directories above the initial directory. Select the notebook `index.ipynb` in the same directory as this `README.md`.
+The home page should show a list of files in the directory where the `jupyter-notebook` server is running. _Note_ if you have started the server in another directory, you will not be able to access directories above the initial directory. In the folder `Day 3` Select the notebook `index.ipynb` to see an outline of how to go through the notebooks for UQSA.
 
 
-An alternative is to use the graphical menu of the Anaconda Navigator <https://docs.anaconda.com/anaconda/user-guide/getting-started/>, and select the `uqsa_tut` environment then open the Jupyter-Notebook app (Screen shots to follow).
-
-
+An alternative method to start the server is to use the graphical menu of the Anaconda Navigator <https://docs.anaconda.com/anaconda/user-guide/getting-started/>, and select the `uqsa_tut` environment then open the Jupyter-Notebook app (Screen shots to follow).
 
 
 # Registering the kernel
