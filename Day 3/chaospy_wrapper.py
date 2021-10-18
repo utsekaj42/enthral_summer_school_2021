@@ -41,26 +41,23 @@ def parse_var_index(var):
 def create_variable_masks(expansion):
     dim = len(expansion['basis']['dists'])
     poly = expansion['basis']['poly']
-    norms = expansion['basis']['norms']
+    names_dict = {name:idx for idx, name in enumerate(poly.names)} # TODO: confirm this should be the canonical ordering for the distribution as well?
 
-    main = np.zeros(dim)
-    total = np.zeros(dim)
     var_sel = np.zeros((dim, len(poly)), bool)
     main_sel = np.zeros((dim, len(poly)), bool)
     for base_idx, pol in enumerate(poly):
         nvars = len(pol.names)
-        if nvars == 1:
-            var_idx = parse_var_index(pol.names[0])
-            nvars = 'q'+str(var_idx) in str(pol)
-            if nvars:
+        if nvars == 1: # The constant polynomial says it has a variable q0 so we need to catch this
+            var_name = pol.names[0]
+            if var_name in str(pol):
+                var_idx = names_dict[var_name]
                 main_sel[var_idx, base_idx] = True
                 var_sel[var_idx, base_idx] = True
             else:
                 mean_idx = base_idx
         else:
-            # main_sel[:, base_idx] = False # Should be unnecessary
-            for var in pol.names:
-                var_idx = parse_var_index(var)
+            for var_name in pol.names:
+                var_idx = names_dict[var_name]
                 var_sel[var_idx, base_idx] = True
     return mean_idx, main_sel, var_sel
                 
@@ -257,6 +254,51 @@ def test_ishigami():
     print((0,2), D13/D, S2[0,2]) 
 
 
+def test_high_dims(dims=10):
+    """ TODO: Write test to confirm functionality for ndarray quantities of interest"""
+    w = (np.arange(dims)+1)/dims
+    s_true = w**2/np.sum(w**2)
+    s_true = np.array((s_true, s_true[::-1])).T
+    s_t_true = w**2/np.sum(w**2)
+    s_t_true = np.array((s_t_true, s_t_true[::-1])).T
+    #w.append(1-np.sum(w))
+    def wrapper(z):
+        """ wrapper for samples from chaospy, i.e. first index (axis=0) iterates over variables"""
+        ret_val = np.array((w@z, w[::-1]@z)).T
+        return ret_val
+
+    jpdf = cp.Iid(cp.Uniform(0, 1), dims)
+    mean_true = np.sum(w)/2 
+    variance_true = np.sum(w**2)/12 
+
+    polynomial_order = 2 # Should be exact with order 1, but good to test with quadractic
+    basis = generate_basis(polynomial_order, jpdf)
+    # 2. generate samples with Sobol sampling
+    Ns_pc = 4*len(basis['poly'])
+    samples_pc = jpdf.sample(size=Ns_pc, rule='S')
+    # 3. evaluate the model, to do so transpose samples and hash input data
+    model_evaluations = wrapper(samples_pc)
+    print(model_evaluations.shape)
+    # 4. calculate generalized polynomial chaos expression
+    gpce_regression = fit_regression(basis, samples_pc, model_evaluations)
+    stats = calc_descriptives(gpce_regression)
+    print("mean: --------------------------------------------------------------------")
+    print(stats['mean'])
+    print(mean_true)
+    print("Variance: --------------------------------------------------------------------")
+    print(stats['variance'])
+    print(variance_true)
+    
+    Spc = stats['sens_m']
+    Stpc = stats['sens_t']
+    print(Spc.shape, s_true.shape)
+    print("S_i--------------------------------------------------------------------")
+    for idx in range(dims):
+        print(s_true[idx, 0], Spc[idx, 0], s_true[idx,1], Spc[idx,1])
+    print("S_t,i--------------------------------------------------------------------")
+    for idx in range(dims):
+        print(s_t_true[idx, 0], Stpc[idx, 0], s_t_true[idx,1], Stpc[idx,1])
+    
 def test_array_output():
     """ TODO: Write test to confirm functionality for ndarray quantities of interest"""
     w = [0.25, 0.4]
@@ -309,3 +351,9 @@ def test_array_output():
     print("--------------------------------------------------------------------")
     S2_dict, _ = calc_sensitivity_indices(gpce_regression, 2)
     print(S2_dict)
+
+if __name__ == "__main__":
+    print(9)
+    test_high_dims(dims=9)
+    print(11)
+    test_high_dims(dims=11)
